@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use App\ViewModels\MovieViewModel;
+use App\ViewModels\MoviesViewModel;
 use Illuminate\Support\Facades\Http;
 
 class MovieController extends Controller
@@ -21,16 +23,13 @@ class MovieController extends Controller
         $nowMovies = Http::get('https://api.themoviedb.org/3/movie/now_playing', ['api_key' => $API_KEY])->json()['results'];
         $genreMovies = Http::get('https://api.themoviedb.org/3/genre/movie/list', ['api_key' => $API_KEY])->json()['genres'];
 
-        //collect data genre
-        $genres = collect($genreMovies)->mapWithKeys(function ($item, $key) {
-            return [$item['id'] => $item['name']];
-        });
-
-        return view('index', [
-            'popularMovies' => $popularMovies,
-            'nowMovies' => $nowMovies,
-            'genres' => $genres
-        ]);
+        $viewModel = new MoviesViewModel(
+            $popularMovies,
+            $nowMovies,
+            $genreMovies
+        );
+        
+        return view('index', $viewModel);
     }
 
     /**
@@ -66,9 +65,11 @@ class MovieController extends Controller
 
         $detailMovie = Http::get('https://api.themoviedb.org/3/movie/'.$id.'?api_key='.$API_KEY.'&append_to_response=credits,videos,images')->json();
 
-        return view('show', [
-            'detail' => $detailMovie
-        ]);
+        $viewModel = new MovieViewModel(
+            $detailMovie
+        );
+        
+        return view('show', $viewModel);
     }
 
     /**
